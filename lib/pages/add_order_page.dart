@@ -65,8 +65,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
   void _submitOrder() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // Xử lý thêm đơn hàng vào cơ sở dữ liệu (chưa làm Firebase)
-      Navigator.pop(context); // Quay lại trang trước sau khi thêm
+      Navigator.pop(context);
     }
   }
 }
