@@ -51,7 +51,7 @@ class HomePage extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'headchef@gmail.com',
+                          'phuctv1112004@gmail.com',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,

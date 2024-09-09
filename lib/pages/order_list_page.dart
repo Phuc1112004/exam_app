@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'add_order_page.dart';
 
 class OrderListPage extends StatelessWidget {
@@ -12,17 +12,39 @@ class OrderListPage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => AddOrderPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddOrderPage()),
+              );
             },
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: 10, // Giả lập 10 đơn hàng
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text('Dish $index'),
-            subtitle: Text('Votes: 5, Notes: Good, Quantity: 2'),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('orders').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('No orders found'));
+          }
+
+          final orders = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: orders.length,
+            itemBuilder: (context, index) {
+              final order = orders[index].data() as Map<String, dynamic>;
+              return ListTile(
+                title: Text(order['dishName'] ?? 'No Name'),
+                subtitle: Text(
+                  'Votes: ${order['votes'] ?? 0}, '
+                      'Notes: ${order['note'] ?? 'No Notes'}, '
+                      'Quantity: ${order['quantity'] ?? 0}',
+                ),
+              );
+            },
           );
         },
       ),
