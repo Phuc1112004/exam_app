@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddOrderPage extends StatefulWidget {
   @override
@@ -6,11 +7,10 @@ class AddOrderPage extends StatefulWidget {
 }
 
 class _AddOrderPageState extends State<AddOrderPage> {
-  final _formKey = GlobalKey<FormState>();
-  String dishName = '';
-  int votes = 0;
-  String notes = '';
-  int quantity = 1;
+  final _dishNameController = TextEditingController();
+  final _votesController = TextEditingController();
+  final _noteController = TextEditingController();
+  final _quantityController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,53 +19,67 @@ class _AddOrderPageState extends State<AddOrderPage> {
         title: Text('Add New Order'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Dish Name'),
-                onSaved: (value) {
-                  dishName = value!;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Votes'),
-                keyboardType: TextInputType.number,
-                onSaved: (value) {
-                  votes = int.parse(value!);
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Notes'),
-                onSaved: (value) {
-                  notes = value!;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Quantity'),
-                keyboardType: TextInputType.number,
-                onSaved: (value) {
-                  quantity = int.parse(value!);
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitOrder,
-                child: Text('Add Order'),
-              ),
-            ],
-          ),
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _dishNameController,
+              decoration: InputDecoration(labelText: 'Dish Name'),
+            ),
+            TextField(
+              controller: _votesController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Votes'),
+            ),
+            TextField(
+              controller: _noteController,
+              decoration: InputDecoration(labelText: 'Note'),
+            ),
+            TextField(
+              controller: _quantityController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Quantity'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _addOrder,
+              child: Text('Add Order'),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _submitOrder() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+  Future<void> _addOrder() async {
+    final dishName = _dishNameController.text;
+    final votes = int.tryParse(_votesController.text) ?? 0;
+    final note = _noteController.text;
+    final quantity = int.tryParse(_quantityController.text) ?? 0;
+
+    if (dishName.isEmpty || votes < 0 || quantity < 0) {
+      // Display an error message if validation fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please provide valid data')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('orders').add({
+        'dishName': dishName,
+        'votes': votes,
+        'note': note,
+        'quantity': quantity,
+      });
+
+      // Navigate back to the order list page
       Navigator.pop(context);
+    } catch (e) {
+      // Handle errors if any
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add order: $e')),
+      );
     }
   }
 }
